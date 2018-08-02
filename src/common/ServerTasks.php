@@ -176,7 +176,7 @@ class ServerTasks extends Tasks implements TaskInterface
       $servers = $GLOBALS['roles'][$role];
       $app_id = "$project_name.$build_type";
       # Check we have a template before continuing
-      $vhost_template = $this->taskConfigTasks->returnConfigItem($build_type, 'server', 'vhost-template');
+      $vhost_template = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-template');
       if (!$vhost_template) {
         $this->printTaskError("###### No template found in config, aborting vhost creation");
         return;
