@@ -1,5 +1,5 @@
 <?php
-namespace CodeEnigma\Deployments\Robo\common;
+namespace CodeEnigma;
 
 use Robo\Task\BaseTask;
 use Robo\Common\TaskIO;

@@ -5,12 +5,11 @@
  * @see http://robo.li/
  */
 
-use CodeEnigma\Deployments\Robo\common\loadTasks as CommonTasks;
 use Robo\Tasks;
 
 class RoboFile extends Tasks
 {
-  use CommonTasks;
+  use CodeEnigma\LoadTasks;
 
   // define public methods as commands
   /**
