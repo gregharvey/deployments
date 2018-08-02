@@ -9,7 +9,7 @@ use Robo\Tasks;
 
 class RoboFile extends Tasks
 {
-  use CodeEnigma\LoadTasks;
+  use CodeEnigma\loadTasks;
 
   // define public methods as commands
   /**
