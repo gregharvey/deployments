@@ -82,7 +82,7 @@ class RoboFile extends Tasks
       # Figure out the URL for this application
       $app_url = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'url', $app_url);
       if (!$app_url) {
-        $app_url = strtolower("$project_name-$buildtype.$base_domain");
+        $app_url = strtolower("$project_name-$build_type.$base_domain");
       }
 
       # Debug feedback
