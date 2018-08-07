@@ -6,6 +6,6 @@ class cleanBuildDefault {
 
   }
   public function process() {
-    
+    print "Hello World!";
   }
 }
