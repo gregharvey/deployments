@@ -50,7 +50,7 @@ class RoboFile extends Tasks
        */
 
       $cleanBuild = new cleanBuild();
-      cleanBuild()->process();
+      $cleanBuild->process();
 
       # The actual working directory of our build is a few levels up from where we are
       $GLOBALS['build_cwd']    = getcwd() . '/../../..';
