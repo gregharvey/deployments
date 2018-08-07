@@ -14,6 +14,6 @@
         "aws/aws-sdk-php": "^3.62"
     },
     "autoload": {
-        "psr-4": {"CodeEnigma\\": "src/common/"}
+        "psr-4": {"CodeEnigma\\Deployments\\": "src/"}
     }
 }
