@@ -6,6 +6,6 @@ class preBuildDefault {
 
   }
   public function process() {
-    print "Hello World!";
+    print "Hello World!\n";
   }
 }
