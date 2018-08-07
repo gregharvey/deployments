@@ -1,5 +1,5 @@
 <?php
-namespace CodeEnigma\Deployments;
+namespace CodeEnigma\Deployments\common;
 
 # Required for outputting messages from custom tasks
 use Robo\Common\TaskIO;
