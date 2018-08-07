@@ -1,5 +1,5 @@
 <?php
-namespace CodeEnigma;
+namespace CodeEnigma\Deployments;
 
 /**
  * Trait loadTasks

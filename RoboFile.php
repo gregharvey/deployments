@@ -7,10 +7,11 @@
 
 use Robo\Tasks;
 use CodeEnigmaLocal\Deployments as LocalDeployments;
+use CodeEnigma\Deployments\common as CommonTasks;
 
 class RoboFile extends Tasks
 {
-  use CodeEnigma\Deployments\common\loadTasks;
+  use CommonTasks\loadTasks;
 
   // define public methods as commands
   /**
