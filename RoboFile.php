@@ -6,6 +6,7 @@
  */
 
 use Robo\Tasks;
+use CodeEnigmaLocal\Deployments;
 
 class RoboFile extends Tasks
 {
@@ -47,6 +48,8 @@ class RoboFile extends Tasks
       /*
        * PREPARATION STAGE
        */
+
+      $cleanBuild = new cleanBuild();
 
       # The actual working directory of our build is a few levels up from where we are
       $GLOBALS['build_cwd']    = getcwd() . '/../../..';
