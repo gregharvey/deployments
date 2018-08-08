@@ -70,7 +70,7 @@ class RoboFile extends Tasks
       $GLOBALS['build_cwd']    = getcwd() . '/../../../..';
       # Move our config to the right place for Robo.li to auto-detect
       $this->say("Moving our robo.yml file to the Robo.li directory");
-      $this->_copy($GLOBALS['build_cwd'] . '/robo.yml', './robo.yml');
+      $this->_copy($GLOBALS['build_cwd'] . '/build/robo.yml', './robo.yml');
 
       # Set web server root and app location
       $GLOBALS['www_root']   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'www-root', '/var/www');
