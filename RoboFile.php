@@ -46,15 +46,8 @@ class RoboFile extends Tasks
       # Off we go!
       $this->yell("Starting a build");
 
-      /*
-       * PREPARATION STAGE
-       */
-
-      $preBuild = new LocalDeployments\preBuild();
-      $preBuild->process();
-
       # The actual working directory of our build is a few levels up from where we are
-      $GLOBALS['build_cwd']    = getcwd() . '/../../..';
+      $GLOBALS['build_cwd']    = getcwd() . '/../../../..';
       # Move our config to the right place for Robo.li to auto-detect
       $this->say("Moving our robo.yml file to the Robo.li directory");
       $this->_copy($GLOBALS['build_cwd'] . '/robo.yml', './robo.yml');
@@ -99,14 +92,21 @@ class RoboFile extends Tasks
       $this->taskConfigTasks()->defineRoles($cluster, $build_type);
 
       /*
+       * PREPARATION STAGE
+       */
+
+      $preBuild = new LocalDeployments\preBuild();
+      $preBuild->process();
+
+      /*
        * APPLICATION DEPLOYMENT STAGE
        */
 
       # Create build directory
-      $this->taskServerTasks()->createBuildDirectory();
+      $preBuild->createBuildDirectory();
       # Check out the code
       # We have to do this before the build hook so it's present on the server
-      $this->taskServerTasks()->cloneRepo($repo_url, $branch);
+      $preBuild->cloneRepo($repo_url, $branch);
       # Give developers an opportunity to inject some code
       $this->taskUtils()->performClientDeployHook($project_name, $build, $build_type, 'pre');
       # Adjust links to builds
