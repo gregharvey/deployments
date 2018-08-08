@@ -13,6 +13,11 @@ class RoboFile extends Tasks
 {
   use CommonTasks\loadTasks;
 
+  protected function preBuildProcess() {
+    $preBuild = new LocalDeployments\preBuild();
+    $preBuild->process($this->config);
+  }
+
   // define public methods as commands
   /**
    * Deploy code to a remote server or servers
@@ -46,26 +51,34 @@ class RoboFile extends Tasks
       # Off we go!
       $this->yell("Starting a build");
 
-      /*
-       * PREPARATION STAGE
-       */
-
-      $preBuild = new LocalDeployments\preBuild();
-      $preBuild->process();
+      # Create an empty class to store variables in
+      $this->config = new CommonTasks\Config();
+      $this->config->project_name = $project_name;
+      $this->config->repo_url = $repo_url;
+      $this->config->branch = $branch;
+      $this->config->build_type = $build_type;
+      $this->config->build = $build;
+      $this->config->keep_builds = $keep_builds;
+      $this->config->app_url = $app_url;
+      $this->config->handle_vhosts = $handle_vhosts;
+      $this->config->cluster = $cluster;
+      $this->config->autoscale = $autoscale;
+      $this->config->base_domain = $base_domain;
+      $this->config->php_ini_file = $php_ini_file;
 
       # The actual working directory of our build is a few levels up from where we are
-      $GLOBALS['build_cwd']    = getcwd() . '/../../..';
+      $GLOBALS['build_cwd']    = getcwd() . '/../../../..';
       # Move our config to the right place for Robo.li to auto-detect
       $this->say("Moving our robo.yml file to the Robo.li directory");
       $this->_copy($GLOBALS['build_cwd'] . '/robo.yml', './robo.yml');
 
       # Set web server root and app location
       $GLOBALS['www_root']   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'www-root', '/var/www');
-      $app_location          = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'location', 'www');
+      $this->config->app_location          = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'location', 'www');
       # Fixed variables
       $GLOBALS['build_path'] = $GLOBALS['www_root'] . '/' . $project_name . '_' . $build_type . '_build_' . (string)$build;
-      if ($app_location) {
-        $GLOBALS['app_path'] = $GLOBALS['build_path'] . '/' . $app_location;
+      if ($this->config->app_location) {
+        $GLOBALS['app_path'] = $GLOBALS['build_path'] . '/' . $this->config->app_location;
       }
       else {
         $GLOBALS['app_path'] = $GLOBALS['build_path'];
@@ -75,19 +88,19 @@ class RoboFile extends Tasks
       $this->say("Setting up the environment");
       # Set up server environment information
       $GLOBALS['ci_user']    = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'ci-user');
-      $ssh_key               = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'ssh-key');
+      $this->config->ssh_key               = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'ssh-key');
       # Set up web server - defaults to config for Nginx on Debian
-      $web_server_restart    = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'web-server-restart', '/etc/init.d/nginx reload');
-      $vhost_base_location   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-base-location', '/etc/nginx/sites-available');
-      $vhost_link_location   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-link-location', '/etc/nginx/sites-enabled');
+      $this->config->web_server_restart    = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'web-server-restart', '/etc/init.d/nginx reload');
+      $this->config->vhost_base_location   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-base-location', '/etc/nginx/sites-available');
+      $this->config->vhost_link_location   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-link-location', '/etc/nginx/sites-enabled');
       # Set up application information
-      $notifications_email   = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'notifications-email');
-      $app_link              = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'link', $GLOBALS['www_root'] . '/live.' . $project_name . '.' . $build_type);
-      $app_port              = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'port', "80");
+      $this->config->notifications_email   = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'notifications-email');
+      $this->config->app_link              = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'link', $GLOBALS['www_root'] . '/live.' . $project_name . '.' . $build_type);
+      $this->config->app_port              = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'port', "80");
       # Figure out the URL for this application
-      $app_url = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'url', $app_url);
-      if (!$app_url) {
-        $app_url = strtolower("$project_name-$build_type.$base_domain");
+      $this->config->app_url = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'url', $app_url);
+      if (!$this->config->app_url) {
+        $this->config->app_url = strtolower("$project_name-$build_type.$base_domain");
       }
 
       # Debug feedback
@@ -99,14 +112,15 @@ class RoboFile extends Tasks
       $this->taskConfigTasks()->defineRoles($cluster, $build_type);
 
       /*
+       * PREPARATION STAGE
+       */
+
+      $this->preBuildProcess();
+
+      /*
        * APPLICATION DEPLOYMENT STAGE
        */
 
-      # Create build directory
-      $this->taskServerTasks()->createBuildDirectory();
-      # Check out the code
-      # We have to do this before the build hook so it's present on the server
-      $this->taskServerTasks()->cloneRepo($repo_url, $branch);
       # Give developers an opportunity to inject some code
       $this->taskUtils()->performClientDeployHook($project_name, $build, $build_type, 'pre');
       # Adjust links to builds

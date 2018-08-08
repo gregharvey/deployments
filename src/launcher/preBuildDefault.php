@@ -1,11 +1,16 @@
 <?php
 namespace CodeEnigma\Deployments\launcher;
 
-class preBuildDefault {
-  public function __construct() {
+use CodeEnigma\Deployments\common\ServerTasks;
 
+class preBuildDefault {
+
+  public function __construct() {
+    $this->serverTasks = new ServerTasks();
   }
-  public function process() {
-    print "Hello World!\n";
+
+  public function process($vars) {
+    $this->serverTasks->createBuildDirectory();
+    $this->serverTasks->cloneRepo($vars->repo_url, $vars->branch);
   }
 }
