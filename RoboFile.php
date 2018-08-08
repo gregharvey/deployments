@@ -46,6 +46,21 @@ class RoboFile extends Tasks
       # Off we go!
       $this->yell("Starting a build");
 
+      # Create an empty class to store variables in
+      $vars = new stdClass();
+      $vars->project_name = $project_name;
+      $vars->repo_url = $repo_url;
+      $vars->branch = $branch;
+      $vars->build_type = $build_type;
+      $vars->build = $build;
+      $vars->keep_builds = $keep_builds;
+      $vars->app_url = $app_url;
+      $vars->handle_vhosts = $handle_vhosts;
+      $vars->cluster = $cluster;
+      $vars->autoscale = $autoscale;
+      $vars->base_domain = $base_domain;
+      $vars->php_ini_file = $php_ini_file;
+
       # The actual working directory of our build is a few levels up from where we are
       $GLOBALS['build_cwd']    = getcwd() . '/../../../..';
       # Move our config to the right place for Robo.li to auto-detect
@@ -54,11 +69,11 @@ class RoboFile extends Tasks
 
       # Set web server root and app location
       $GLOBALS['www_root']   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'www-root', '/var/www');
-      $app_location          = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'location', 'www');
+      $vars->app_location          = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'location', 'www');
       # Fixed variables
       $GLOBALS['build_path'] = $GLOBALS['www_root'] . '/' . $project_name . '_' . $build_type . '_build_' . (string)$build;
-      if ($app_location) {
-        $GLOBALS['app_path'] = $GLOBALS['build_path'] . '/' . $app_location;
+      if ($vars->app_location) {
+        $GLOBALS['app_path'] = $GLOBALS['build_path'] . '/' . $vars->app_location;
       }
       else {
         $GLOBALS['app_path'] = $GLOBALS['build_path'];
@@ -68,19 +83,19 @@ class RoboFile extends Tasks
       $this->say("Setting up the environment");
       # Set up server environment information
       $GLOBALS['ci_user']    = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'ci-user');
-      $ssh_key               = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'ssh-key');
+      $vars->ssh_key               = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'ssh-key');
       # Set up web server - defaults to config for Nginx on Debian
-      $web_server_restart    = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'web-server-restart', '/etc/init.d/nginx reload');
-      $vhost_base_location   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-base-location', '/etc/nginx/sites-available');
-      $vhost_link_location   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-link-location', '/etc/nginx/sites-enabled');
+      $vars->web_server_restart    = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'web-server-restart', '/etc/init.d/nginx reload');
+      $vars->vhost_base_location   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-base-location', '/etc/nginx/sites-available');
+      $vars->vhost_link_location   = $this->taskConfigTasks()->returnConfigItem($build_type, 'server', 'vhost-link-location', '/etc/nginx/sites-enabled');
       # Set up application information
-      $notifications_email   = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'notifications-email');
-      $app_link              = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'link', $GLOBALS['www_root'] . '/live.' . $project_name . '.' . $build_type);
-      $app_port              = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'port', "80");
+      $vars->notifications_email   = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'notifications-email');
+      $vars->app_link              = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'link', $GLOBALS['www_root'] . '/live.' . $project_name . '.' . $build_type);
+      $vars->app_port              = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'port', "80");
       # Figure out the URL for this application
-      $app_url = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'url', $app_url);
-      if (!$app_url) {
-        $app_url = strtolower("$project_name-$build_type.$base_domain");
+      $vars->app_url = $this->taskConfigTasks()->returnConfigItem($build_type, 'app', 'url', $app_url);
+      if (!$vars->app_url) {
+        $vars->app_url = strtolower("$project_name-$build_type.$base_domain");
       }
 
       # Debug feedback
@@ -96,17 +111,12 @@ class RoboFile extends Tasks
        */
 
       $preBuild = new LocalDeployments\preBuild();
-      $preBuild->process();
+      $preBuild->process($vars);
 
       /*
        * APPLICATION DEPLOYMENT STAGE
        */
 
-      # Create build directory
-      $preBuild->createBuildDirectory();
-      # Check out the code
-      # We have to do this before the build hook so it's present on the server
-      $preBuild->cloneRepo($repo_url, $branch);
       # Give developers an opportunity to inject some code
       $this->taskUtils()->performClientDeployHook($project_name, $build, $build_type, 'pre');
       # Adjust links to builds
